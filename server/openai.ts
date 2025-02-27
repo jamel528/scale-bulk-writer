@@ -200,41 +200,34 @@ export async function generateArticle(
       );
 
       const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini-2024-07-18",
         messages: [
           {
             role: "system",
             content: `You are a content writer skilled in generating valid JSON. 
-            
-            Respond with a JSON object structured as follows:
-            {
-              "title": "Provided title",
-              "content": "Full article content with HTML formatting"
-            }
-            Ensure all special characters are escaped correctly for JSON. 
-      
-            Write a detailed article (1200-1300 words) on the given title, using proper HTML tags:
-            - <h2> for main sections
-            - <h3> for subsections
-            - Wrap paragraphs in <p>
-            - Use <ul> or <ol> for lists
-            
-            Include relevant topics and keywords naturally, with examples and a professional tone.`,
+                Respond with a JSON object structured as follows:
+                {
+                  "title": "Provided title",
+                  "content": "Full article content with HTML formatting"
+                }
+                Write a detailed article (You must use more than 3500 tokens for this article) on the given title, using proper HTML tags:
+                - <h2> for main sections
+                - <h3> for subsections
+                - Wrap paragraphs in <p> with an additional <br> tag for spacing between paragraphs
+                - Use <ul> or <ol> for lists
+                Include relevant topics and keywords naturally, with examples and a professional tone. Ensure to elaborate on each point with examples and detailed explanations.`,
           },
           {
             role: "user",
             content: `Generate article #${articleIndex + 1} of ${totalArticles}.
-            Title: ${title}
-            Topics: ${topics}
-            Keywords: ${keywords}
-            
-            Ensure the article matches the title and adheres to the structure outlined above.`,
+                Title: ${title}
+                Topics: ${topics}
+                Keywords: ${keywords}
+                Ensure the article matches the title and adheres to the structure outlined above. Use all your available tokens.`,
           },
         ],
-        temperature: 0.9,
-        max_tokens: 4096,
-        presence_penalty: 0.3,
-        frequency_penalty: 0.3,
+        max_tokens: 6000,
+        response_format: { type: "json_object" },
       });
 
       const content = response.choices[0].message.content;
@@ -284,7 +277,7 @@ export async function generateArticle(
       }
 
       // Exponential backoff
-      const backoffDelay = RETRY_DELAY * Math.pow(2, attempts - 1);
+      const backoffDelay = RETRY_DELAY;
       console.log(`Waiting ${backoffDelay}ms before retry...`);
       await new Promise((resolve) => setTimeout(resolve, backoffDelay));
     }
